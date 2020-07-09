@@ -1,0 +1,59 @@
+# Attempt at building all that shit using a Makefile. 
+# This doesnt' work, still needs loads more shit somehow.
+# Does compile, but doesn't link.
+#
+# This tries to use PlarformIO already installed SDKs
+
+# apt-get install libnewlib-nano-arm-none-eabi
+
+TARGET		= bluepill_scsi.bin
+
+PIO			= $(HOME)/.platformio/packages/
+AR			= $(PIO)/framework-arduinoststm32
+GCC			= $(PIO)/toolchain-gccarmnoneeabi/bin
+
+AR_CORE		= $(AR)/cores/arduino
+
+IPATH		+= -I$(AR_CORE)
+SRC			+= ${wildcard $(AR_CORE)/*.c*}
+
+IPATH		+= -I$(AR_CORE)/stm32
+IPATH		+= -I$(AR_CORE)/stm32/LL
+
+IPATH		+= -I$(AR)/variants/PILL_F103XX
+SRC			+= ${wildcard $(AR)/variants/PILL_F103XX/*.c*}
+SRC 		+= ${wildcard $(AR)/libraries/SrcWrapper/src/*/*.c*}
+
+IPATH		+= -Ilib/SdFat
+IPATH		+= -Ilib/SdFat/src
+IPATH		+= -Ilib/SdFat/FatLib
+
+CPPFLAGS	+= -DARDUINO -DSerial=Serial9
+CPPFLAGS	+= -DSTM32F1xx -DSTM32F103x6
+IPATH		+= -I$(AR)/system/STM32F1xx
+IPATH		+= -I$(PIO)/framework-cmsis/CMSIS/Core/Include
+IPATH		+= -I$(AR)/system/Drivers/CMSIS/Device/ST/STM32F1xx/Include
+IPATH		+= -I$(AR)/system/Drivers/STM32F1xx_HAL_Driver/Inc
+
+IPATH		+= -I$(AR)/libraries/SPI/src
+SRC			+= ${wildcard $(AR)/libraries/SPI/src/*.cpp}
+SRC			+= ${wildcard $(AR)/libraries/SPI/src/*/*.c}
+
+CPPFLAGS	+= -Wno-narrowing -Wno-overflow
+CPPFLAGS	+= $(IPATH)
+
+CFLAGS		+= -fpermissive
+
+all			: $(TARGET)
+
+SRC			= ${wildcard src/*.cpp}
+SRC			+= ${wildcard lib/SdFat/src/*.cpp}
+SRC			+= ${wildcard lib/SdFat/src/*/*.cpp}
+
+$(TARGET)	: $(SRC)
+	$(GCC)/arm-none-eabi-c++ -o $@ $^ \
+		-mcpu=cortex-m3 -mthumb \
+		$(CPPFLAGS) $(CFLAGS)
+
+${warning $(SRC)}
+
